@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "./components/navbar";
+import { Nunito } from "next/font/google";
+import Footer from "./components/footer";
+import { ToastContainer } from 'react-toastify';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const nunito = Nunito({
+  variable: "--font-nunito", // To‘g‘ri nom
   subsets: ["latin"],
+  weight: ["400", "700"], // Faqat kerakli vaznlarni yuklash
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -23,11 +23,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" className={nunito.variable} suppressHydrationWarning>
+      <body className="antialiased">
+        <Navbar />
         {children}
+        <ToastContainer position="bottom-right"/>
+        <Footer/>
       </body>
     </html>
   );
