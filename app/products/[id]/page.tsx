@@ -13,18 +13,32 @@ const ProductDetailPage = () => {
   const { id } = useParams();
 
   const handleClick = () => {
-      if (!product) return;
-      const products: ProductType[] = JSON.parse(localStorage.getItem("carts") || "[]")
-      const existingProductIndex = products.findIndex((p => p.id === product.id));
+    if (!product) return; // Agar mahsulot mavjud bo'lmasa, hech narsa qilmasin
+
+    try {
+      // LocalStorage'dan cartni olish
+      const products: ProductType[] = JSON.parse(localStorage.getItem("carts") || "[]");
+
+      // Mahsulotni cartga qo'shish yoki miqdorini oshirish
+      const existingProductIndex = products.findIndex(p => p.id === product.id);
+
       if (existingProductIndex !== -1) {
+        // Agar mahsulot allaqachon bor bo'lsa, miqdorini oshirish
         products[existingProductIndex].quantity += 1;
-      }else{
+      } else {
+        // Yangi mahsulotni qo'shish
         const newProduct = { ...product, quantity: 1 };
         products.push(newProduct);
       }
+
+      // Mahsulotni LocalStorage'ga qayta saqlash
       localStorage.setItem('carts', JSON.stringify(products));
-      toast(`Product added to cart`)
+      toast('Mahsulot savatga qo\'shildi');
+    } catch (error) {
+      console.error("Savatga mahsulot qo'shishda xato:", error);
+      toast('Mahsulotni savatga qo\'shishda xato yuz berdi');
     }
+  };
 
   useEffect(() => {
     async function getData() {
@@ -33,14 +47,16 @@ const ProductDetailPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`https://fakestoreapi.in/api/products/${id}`);
-        if (!res.ok) throw new Error('Failed to fetch product');
+        const res = await fetch(`https://fakestoreapi.in/api/products/${id}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) throw new Error('Mahsulotni olishda xato');
         const data = await res.json();
         const productData = data.product as ProductType;
         setProduct(productData);
       } catch (error) {
-        console.error('Error fetching product:', error);
-        setError('Failed to load product details');
+        console.error('Mahsulotni olishda xato:', error);
+        setError('Mahsulotni yuklab olishda xato');
       } finally {
         setLoading(false);
       }
@@ -53,7 +69,7 @@ const ProductDetailPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3 p-6 bg-white rounded-lg shadow-md">
           <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-700 text-base font-medium">Loading product details...</p>
+          <p className="text-gray-700 text-base font-medium">Mahsulot ma`lumotlari yuklanmoqda...</p>
         </div>
       </div>
     );
@@ -76,13 +92,13 @@ const ProductDetailPage = () => {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Product Not Found</h3>
-          <p className="text-gray-600 mb-4">{error || 'The product you’re looking for doesn’t exist.'}</p>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Mahsulot topilmadi</h3>
+          <p className="text-gray-600 mb-4">{error || 'Siz qidirayotgan mahsulot mavjud emas.'}</p>
           <Link
             href="/products"
             className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
           >
-            Back to Shop
+            Do`konga qaytish
           </Link>
         </div>
       </div>
@@ -90,10 +106,10 @@ const ProductDetailPage = () => {
   }
 
   return (
-    <div className="bg-gray-50  py-15 px-4 sm:px-6 lg:px-8">
+    <div className="bg-gray-50 py-15 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Product Image */}
+          {/* Mahsulot rasmiga ko'rsatish */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="relative h-[400px]">
               <Image
@@ -107,7 +123,7 @@ const ProductDetailPage = () => {
             </div>
           </div>
 
-          {/* Product Details */}
+          {/* Mahsulot tafsilotlari */}
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 leading-tight">{product.title}</h1>
@@ -119,7 +135,7 @@ const ProductDetailPage = () => {
               {product.brand && (
                 <div className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-md">
                   <span className="text-sm font-medium text-gray-700">
-                    {product.brand} ({product.model} )
+                    {product.brand} ({product.model})
                   </span>
                 </div>
               )}
@@ -128,24 +144,22 @@ const ProductDetailPage = () => {
             <p className="text-gray-700 text-base leading-relaxed">{product.description}</p>
 
             <div className="flex justify-between gap-3">
-            <div className="text-gray-600 space-y-1 text-sm">
-              <p>
-                <span className="font-medium">Category:</span> {product.category}
-              </p>
-              <p>
-                <span className="font-medium">Availability:</span> In Stock
-              </p>
-            </div>
-              <button onClick={handleClick} className="flex bg-indigo-600  text-white py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium">
-                Add to Cart
+              <div className="text-gray-600 space-y-1 text-sm">
+                <p>
+                  <span className="font-medium">Kategoriya:</span> {product.category}
+                </p>
+                <p>
+                  <span className="font-medium">Mavjudlik:</span> Omborda bor
+                </p>
+              </div>
+              <button onClick={handleClick} className="flex bg-indigo-600 text-white py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium">
+                Savatga qo`shish
               </button>
-              
             </div>
-
           </div>
         </div>
 
-        {/* Back Link */}
+        {/* Mahsulotlar ro'yxatiga qaytish */}
         <div className="mt-6">
           <Link
             href="/products"
@@ -164,7 +178,7 @@ const ProductDetailPage = () => {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            Back to Products
+            Mahsulotlar ro`yxatiga qaytish
           </Link>
         </div>
       </div>

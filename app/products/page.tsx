@@ -13,7 +13,7 @@ export default function AllProducts() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('https://fakestoreapi.in/api/products', { cache: 'no-store' });
+        const res = await fetch('https://fakestoreapi.in/api/products', { cache: 'no-store' } );
         if (!res.ok) throw new Error('Failed to fetch products');
         const productData = await res.json();
         const data = productData.products as ProductType[];

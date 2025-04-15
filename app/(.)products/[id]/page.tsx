@@ -1,4 +1,5 @@
 'use client';
+
 import { ProductType } from '@/app/interface';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
@@ -9,35 +10,23 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<ProductType | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { id } = useParams();
   const router = useRouter();
 
-  const handleClick = () => {
-    if (!product) return;
-    const products: ProductType[] = JSON.parse(localStorage.getItem("carts") || "[]");
-    const existingProductIndex = products.findIndex((p => p.id === product.id));
-    if (existingProductIndex !== -1) {
-      products[existingProductIndex].quantity += 1;
-    } else {
-      const newProduct = { ...product, quantity: 1 };
-      products.push(newProduct);
-    }
-    localStorage.setItem('carts', JSON.stringify(products));
-    toast(`Product added to cart`);
-  }
+  const params = useParams();
+  const id = params?.id?.toString(); // id ni string ko‘rinishga keltiramiz
 
   useEffect(() => {
     const getData = async () => {
       if (!id) return;
-      
-      setLoading(true);
-      setError(null);
+
       try {
-        const res = await fetch(`https://fakestoreapi.in/api/products/${id}`);
+        setLoading(true);
+        const res = await fetch(`https://fakestoreapi.in/api/products/${id}`, {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error('Failed to fetch product');
         const data = await res.json();
         const productData = data.product as ProductType;
-        
         setProduct(productData);
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -46,8 +35,25 @@ const ProductDetailPage = () => {
         setLoading(false);
       }
     };
+
     getData();
   }, [id]);
+
+  const handleClick = () => {
+    if (!product) return;
+    const products: ProductType[] = JSON.parse(localStorage.getItem('carts') || '[]');
+    const existingProductIndex = products.findIndex((p) => p.id === product.id);
+
+    if (existingProductIndex !== -1) {
+      products[existingProductIndex].quantity += 1;
+    } else {
+      const newProduct = { ...product, quantity: 1 };
+      products.push(newProduct);
+    }
+
+    localStorage.setItem('carts', JSON.stringify(products));
+    toast.success('Product added to cart');
+  };
 
   const closeModal = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -56,7 +62,7 @@ const ProductDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-60 z-50">
+      <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
         <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-xl shadow-2xl">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-700 font-medium">Loading product details...</p>
@@ -89,11 +95,11 @@ const ProductDetailPage = () => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-70 backdrop-blur-sm z-50 p-4"
+      className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 p-4"
       onClick={closeModal}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-6 overflow-hidden transform transition-all duration-300"
+        className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-6 overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -134,12 +140,18 @@ const ProductDetailPage = () => {
           <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">{product.description}</p>
 
           <div className="flex gap-3">
-            <button onClick={handleClick} className="flex-1 bg-blue-600 text-white py-2 md:py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium">
+            <button
+              onClick={handleClick}
+              className="flex-1 bg-blue-600 text-white py-2 md:py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+            >
               Add to Cart
             </button>
-              <button onClick={() => {window.location.reload()}} className="flex-1 bg-transparent border-2 border-gray-300 text-gray-700 py-2 md:py-3 rounded-lg hover:bg-gray-100 transition-colors duration-200 font-medium">
-                View Product
-              </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 bg-transparent border-2 border-gray-300 text-gray-700 py-2 md:py-3 rounded-lg hover:bg-gray-100 transition-colors duration-200 font-medium"
+            >
+              View Product
+            </button>
           </div>
         </div>
       </div>
